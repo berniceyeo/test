@@ -70,16 +70,6 @@ def parse_commands(command_text: str) -> list[Command]:
     return commands
 
 
-def prompt_for_commands() -> list[Command]:
-    """Prompt until at least one valid command is supplied."""
-    while True:
-        commands = parse_commands(read_input(COMMAND_PROMPT))
-        if commands:
-            return commands
-
-        print("Invalid input. Please enter at least one command: L, R, or D.")
-
-
 def print_board(game: Game) -> None:
     """Render the current game state in the terminal."""
     print("Frame:", game.frame)
@@ -90,15 +80,17 @@ def print_board(game: Game) -> None:
 def run_game(game: Game) -> None:
     """Run all configured bricks through the terminal interface."""
     for brick in game.bricks:
-        game.begin_brick(brick)
+        if not game.begin_brick(brick):
+            break
 
         while game.active_brick:
             print_board(game)
-            commands = prompt_for_commands()
+            commands = parse_commands(read_input(COMMAND_PROMPT))
 
             game.process_commands(commands)
             game.advance_frame()
 
-    game.complete()
-    print_board(game)
+    else:
+        game.complete()
+        print_board(game)
     print("Game Over")

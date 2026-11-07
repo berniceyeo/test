@@ -1,10 +1,7 @@
-import re
-
 import pytest
 
 from app.brick import Brick
 from app.controller import run_game
-from app.errors import SpawnError
 from app.game import Game, clear_matches
 from app.models import Command
 
@@ -22,13 +19,7 @@ def test_board_edge_blocks_movement(command):
 def test_oversized_spawn_leaves_state_unchanged(height, width, text):
     game = Game(height=height, width=width, bricks=[])
     before = [row.copy() for row in game.board]
-    with pytest.raises(
-        SpawnError,
-        match=re.escape(
-            f"Cannot spawn brick {text}: it does not fit or its starting cells are occupied."
-        ),
-    ):
-        game.spawn_brick(Brick.from_text(text))
+    assert game.spawn_brick(Brick.from_text(text)) is False
     assert game.active_brick == []
     assert game.board == before
 
@@ -44,6 +35,20 @@ def test_vertical_brick_stops_above_locked_symbol():
     assert game.board[5][1] == "*"
 
 
+def test_failed_begin_brick_does_not_advance_frame():
+    game = Game(height=1, width=3, bricks=[])
+    assert game.begin_brick(Brick.from_text("H@~~")) is True
+    assert game.frame == 1
+    game.lock_brick()
+    before = [row.copy() for row in game.board]
+
+    assert game.begin_brick(Brick.from_text("H^**")) is False
+
+    assert game.frame == 1
+    assert game.active_brick == []
+    assert game.board == before
+
+
 def test_dr_moves_right_after_drop_before_locking(monkeypatch):
     game = Game(height=4, width=5, bricks=[Brick.from_text("H@~~")])
     answers = iter(["DR"])
@@ -53,10 +58,10 @@ def test_dr_moves_right_after_drop_before_locking(monkeypatch):
     assert game.active_brick == []
 
 
-def test_invalid_characters_do_not_block_frame_advance(monkeypatch, capsys):
+def test_no_valid_commands_advance_the_frame(monkeypatch):
     game = Game(height=4, width=5, bricks=[Brick.from_text("H@~~")])
     snapshots = []
-    answers = iter(["L X", "D"])
+    answers = iter(["XX", "D"])
 
     def answer(_prompt):
         snapshots.append((game.frame, game.active_brick.copy()))
@@ -66,10 +71,9 @@ def test_invalid_characters_do_not_block_frame_advance(monkeypatch, capsys):
     run_game(game)
     assert snapshots == [
         (1, [(0, 1, "@"), (0, 2, "~"), (0, 3, "~")]),
-        (2, [(1, 0, "@"), (1, 1, "~"), (1, 2, "~")]),
+        (2, [(1, 1, "@"), (1, 2, "~"), (1, 3, "~")]),
     ]
-    assert game.board[3] == list("@~~..")
-    assert "Invalid command" not in capsys.readouterr().out
+    assert game.board[3] == list(".@~~.")
 
 
 @pytest.mark.parametrize(

@@ -26,9 +26,5 @@ class ExceedMaxBoardSize(InvalidInputError):
     """Board dimensions exceed the configured maximum."""
 
 
-class SpawnError(GameError):
-    """A brick cannot be spawned because it is blocked or does not fit."""
-
-
 class InvalidCommandError(GameError):
     """Invalid command provided for moving the brick."""

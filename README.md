@@ -40,7 +40,7 @@ Enter up to two commands per frame:
 
 For example, `LR` moves left, then right during one frame.
 Only the first two valid commands are processed; other characters are ignored.
-If an entry contains no valid commands, the game asks for commands again without advancing the frame.
+If an entry contains no valid commands, no player move occurs and gravity advances the frame.
 
 ## Run tests
 

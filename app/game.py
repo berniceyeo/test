@@ -1,14 +1,17 @@
 from dataclasses import dataclass, field
+from typing import NamedTuple
 
 from .brick import Brick
 from .constants import EMPTY_CELL
-from .errors import (
-    InvalidCommandError,
-    SpawnError,
-)
+from .errors import InvalidCommandError
 from .models import Command, Direction
 
-Cell = tuple[int, int, str]
+class Cell(NamedTuple):
+    """A brick symbol at a row and column on the board."""
+
+    row: int
+    col: int
+    symbol: str
 
 
 def clear_matches(board: list[list[str]]) -> None:
@@ -60,46 +63,47 @@ class Game:
         ]
         self.active_brick = []
 
-    def spawn_brick(self, brick: Brick):
+    def spawn_brick(self, brick: Brick) -> bool:
+        """Place a brick, returning False without changing state if blocked."""
         if brick.direction is Direction.HORIZONTAL:
             col = (self.width - len(brick.symbols)) // 2
             candidate_cells = [
-                (0, col + i, symbol) for i, symbol in enumerate(brick.symbols)
+                Cell(0, col + i, symbol) for i, symbol in enumerate(brick.symbols)
             ]
         else:  # Vertical brick
             col = self.width // 2
             candidate_cells = [
-                (i, col, symbol) for i, symbol in enumerate(brick.symbols)
+                Cell(i, col, symbol) for i, symbol in enumerate(brick.symbols)
             ]
         if not self._can_place(candidate_cells):
-            raise SpawnError(
-                f"Cannot spawn brick {brick.direction.value}{''.join(brick.symbols)}: "
-                "it does not fit or its starting cells are occupied."
-            )
+            return False
         self.active_brick = candidate_cells
+        return True
 
     def lock_brick(self):
-        for row, col, symbol in self.active_brick:
-            self.board[row][col] = symbol
+        for cell in self.active_brick:
+            self.board[cell.row][cell.col] = cell.symbol
         self.active_brick = []
         clear_matches(self.board)
 
-    def begin_brick(self, brick: Brick) -> None:
-        self.spawn_brick(brick)
+    def begin_brick(self, brick: Brick) -> bool:
+        if not self.spawn_brick(brick):
+            return False
         self.frame += 1
+        return True
 
     def _can_place(self, cells: list[Cell]) -> bool:
         return all(
-            0 <= row < self.height
-            and 0 <= col < self.width
-            and self.board[row][col] == EMPTY_CELL
-            for row, col, _ in cells
+            0 <= cell.row < self.height
+            and 0 <= cell.col < self.width
+            and self.board[cell.row][cell.col] == EMPTY_CELL
+            for cell in cells
         )
 
-    def _move_cells(self, row_change: int, col_change: int):
+    def _move_cells(self, row_change: int, col_change: int) -> list[Cell]:
         return [
-            (row + row_change, col + col_change, symbol)
-            for row, col, symbol in self.active_brick
+            Cell(cell.row + row_change, cell.col + col_change, cell.symbol)
+            for cell in self.active_brick
         ]
 
     def _try_move(self, row_change: int, col_change: int):
@@ -145,6 +149,6 @@ class Game:
 
     def display_board(self) -> list[list[str]]:
         display_board = [row.copy() for row in self.board]
-        for row, col, symbol in self.active_brick:
-            display_board[row][col] = symbol
+        for cell in self.active_brick:
+            display_board[cell.row][cell.col] = cell.symbol
         return display_board

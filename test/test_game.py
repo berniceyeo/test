@@ -4,7 +4,7 @@ import pytest
 
 from app.brick import Brick
 from app.controller import run_game
-from app.errors import InvalidCommandError, SpawnError
+from app.errors import InvalidCommandError
 from app.game import Game, clear_matches
 from app.models import Command
 
@@ -26,7 +26,7 @@ def test_brick_spawns_at_top_center(
 ) -> None:
     game = Game(height=height, width=width, bricks=[])
 
-    game.spawn_brick(Brick.from_text(brick_text))
+    assert game.spawn_brick(Brick.from_text(brick_text)) is True
 
     assert game.active_brick == expected_cells
 
@@ -76,15 +76,11 @@ def test_failed_spawn_leaves_no_active_brick() -> None:
     game.spawn_brick(Brick.from_text("V^**"))
     game.lock_brick()
 
-    with pytest.raises(
-        SpawnError,
-        match=re.escape(
-            "Cannot spawn brick H@~~: it does not fit or its starting cells are occupied."
-        ),
-    ):
-        game.spawn_brick(Brick.from_text("H@~~"))
+    before = [row.copy() for row in game.board]
+    assert game.spawn_brick(Brick.from_text("H@~~")) is False
 
     assert game.active_brick == []
+    assert game.board == before
 
 
 def test_clear_matches_removes_horizontal_run_of_three() -> None:

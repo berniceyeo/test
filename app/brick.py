@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from .constants import ALLOWED_SYMBOLS
 from .errors import (
     BrickStructureError,
     InvalidBrickDirectionError,
@@ -18,14 +19,14 @@ class Brick:
             self.direction = Direction(self.direction)
         except ValueError:
             raise InvalidBrickDirectionError(
-                f"Invalid brick {self.direction}: direction must be H or V"
+                f"Invalid brick {self.direction}: direction must be "
+                f"{Direction.HORIZONTAL.value} or {Direction.VERTICAL.value}"
             )
 
         if len(self.symbols) != 3:
             raise BrickStructureError("Brick must have three symbols")
 
-        allowed_symbols = {"@", "^", "~", "*"}
-        invalid_symbols = set(self.symbols) - allowed_symbols
+        invalid_symbols = set(self.symbols) - ALLOWED_SYMBOLS
 
         if invalid_symbols:
             raise InvalidBrickSymbolError(

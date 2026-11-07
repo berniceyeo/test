@@ -1,5 +1,4 @@
 from .controller import prompt_for_configuration, run_game
-from .errors import SpawnError
 from .game import Game
 from .user_input import read_input
 
@@ -10,12 +9,8 @@ def main():
     while True:
         width, height, bricks = prompt_for_configuration()
 
-        try:
-            game = Game(height=height, width=width, bricks=bricks)
-            run_game(game)
-
-        except SpawnError:
-            print("Game Over")
+        game = Game(height=height, width=width, bricks=bricks)
+        run_game(game)
 
         while True:
             choice = read_input("Enter 'S' to restart or 'Q' to quit: ").strip().upper()
