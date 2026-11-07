@@ -1,6 +1,9 @@
+import re
+
 import pytest
 
 from app.brick import Brick
+from app.controller import run_game
 from app.errors import InvalidCommandError, SpawnError
 from app.game import Game, clear_matches
 from app.models import Command
@@ -48,7 +51,10 @@ def test_move_brick(command: Command, expected_cells: list[tuple[int, int, str]]
 def test_rejects_invalid_command() -> None:
     game = Game(height=4, width=5, bricks=[])
 
-    with pytest.raises(InvalidCommandError):
+    with pytest.raises(
+        InvalidCommandError,
+        match=re.escape("Invalid command X. Use L, R, or D."),
+    ):
         game.move_brick("X")
 
 
@@ -70,7 +76,12 @@ def test_failed_spawn_leaves_no_active_brick() -> None:
     game.spawn_brick(Brick.from_text("V^**"))
     game.lock_brick()
 
-    with pytest.raises(SpawnError):
+    with pytest.raises(
+        SpawnError,
+        match=re.escape(
+            "Cannot spawn brick H@~~: it does not fit or its starting cells are occupied."
+        ),
+    ):
         game.spawn_brick(Brick.from_text("H@~~"))
 
     assert game.active_brick == []
@@ -167,7 +178,7 @@ def test_start_drops_and_locks_two_bricks(monkeypatch) -> None:
     commands = iter(["D", "D"])
     monkeypatch.setattr("builtins.input", lambda _prompt: next(commands))
 
-    game.start()
+    run_game(game)
 
     assert game.active_brick == []
     assert game.board == [
@@ -196,7 +207,7 @@ def test_start_processes_valid_command_sequences(
 
     monkeypatch.setattr("builtins.input", lambda _prompt: next(answers))
 
-    game.start()
+    run_game(game)
 
     assert game.board == [["."] * 5, expected_bottom_row]
 
@@ -213,27 +224,8 @@ def test_start_ignores_commands_after_the_first_two(monkeypatch) -> None:
 
     monkeypatch.setattr("builtins.input", read_command)
 
-    game.start()
+    run_game(game)
 
     assert entered_commands == ["LRD", "D"]
     assert game.board == [["."] * 5, ["."] * 5, [".", "@", "~", "~", "."]]
 
-
-def test_start_ignores_commands_after_the_first_two(monkeypatch) -> None:
-    game = Game(height=4, width=5, bricks=[Brick.from_text("H@~~")])
-    snapshots = []
-    answers = iter(["LLD", "D"])
-
-    def answer(_prompt):
-        snapshots.append((game.frame, game.active_brick.copy()))
-        return next(answers)
-
-    monkeypatch.setattr("builtins.input", answer)
-
-    game.start()
-
-    assert snapshots == [
-        (1, [(0, 1, "@"), (0, 2, "~"), (0, 3, "~")]),
-        (2, [(1, 0, "@"), (1, 1, "~"), (1, 2, "~")]),
-    ]
-    assert game.board[3] == list("@~~..")

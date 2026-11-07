@@ -1,4 +1,4 @@
-"""Shared constants for Match-3 game configuration."""
+"""Shared game values and configuration limits."""
 
 EMPTY_CELL = "."
 MAX_BRICKS = 5

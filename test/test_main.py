@@ -1,7 +1,11 @@
+import re
+
 import pytest
 
 from app.errors import ExceedMaxBoardSize, InvalidInputError
-from app.main import main, parse_to_valid_inputs
+from app.constants import MAX_BRICKS, MAX_HEIGHT, MAX_WIDTH
+from app.controller import parse_to_valid_inputs
+from app.main import main
 from app.models import Direction
 
 
@@ -33,20 +37,45 @@ def test_parse_valid_configuration():
     ]
 
 
+@pytest.mark.parametrize("config", ["abc 5 H@~~", "4 abc H@~~"])
+def test_rejects_non_numeric_board_size_with_friendly_message(config):
+    with pytest.raises(
+        InvalidInputError,
+        match=re.escape("Width and height must be whole numbers."),
+    ):
+        parse_to_valid_inputs(config)
+
+
 def test_rejects_configuration_with_more_than_five_bricks():
-    with pytest.raises(InvalidInputError):
-        parse_to_valid_inputs("4 3 H@~~ H@~~ H@~~ H@~~ H@~~ H@~~")
+    config = "4 3 " + " ".join(["H@~~"] * (MAX_BRICKS + 1))
+
+    with pytest.raises(
+        InvalidInputError,
+        match=re.escape(f"Enter no more than {MAX_BRICKS} bricks."),
+    ):
+        parse_to_valid_inputs(config)
 
 
-@pytest.mark.parametrize("config", ["101 100 H@~~", "100 101 H@~~"])
+@pytest.mark.parametrize(
+    "config",
+    [
+        f"{MAX_WIDTH + 1} {MAX_HEIGHT} H@~~",
+        f"{MAX_WIDTH} {MAX_HEIGHT + 1} H@~~",
+    ],
+)
 def test_rejects_configuration_larger_than_maximum_board(config):
-    with pytest.raises(ExceedMaxBoardSize):
+    with pytest.raises(
+        ExceedMaxBoardSize,
+        match=re.escape(
+            f"Board cannot exceed {MAX_WIDTH} columns by {MAX_HEIGHT} rows."
+        ),
+    ):
         parse_to_valid_inputs(config)
 
 
 def test_accepts_maximum_board_size():
-    width, height, _ = parse_to_valid_inputs("100 100 H@~~")
-    assert (width, height) == (100, 100)
+    width, height, _ = parse_to_valid_inputs(f"{MAX_WIDTH} {MAX_HEIGHT} H@~~")
+    assert (width, height) == (MAX_WIDTH, MAX_HEIGHT)
 
 
 def test_spawn_failure_offers_restart_and_quit(monkeypatch, capsys):

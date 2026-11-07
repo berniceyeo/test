@@ -7,7 +7,6 @@ from .errors import (
     SpawnError,
 )
 from .models import Command, Direction
-from .user_input import read_input
 
 Cell = tuple[int, int, str]
 
@@ -56,7 +55,9 @@ class Game:
 
     def __post_init__(self):
         # Initialize the board with empty spaces
-        self.board = [["." for _ in range(self.width)] for _ in range(self.height)]
+        self.board = [
+            [EMPTY_CELL for _ in range(self.width)] for _ in range(self.height)
+        ]
         self.active_brick = []
 
     def spawn_brick(self, brick: Brick):
@@ -72,7 +73,7 @@ class Game:
             ]
         if not self._can_place(candidate_cells):
             raise SpawnError(
-                f"Cannot spawn brick {brick.direction}{''.join(brick.symbols)}: "
+                f"Cannot spawn brick {brick.direction.value}{''.join(brick.symbols)}: "
                 "it does not fit or its starting cells are occupied."
             )
         self.active_brick = candidate_cells
@@ -82,6 +83,10 @@ class Game:
             self.board[row][col] = symbol
         self.active_brick = []
         clear_matches(self.board)
+
+    def begin_brick(self, brick: Brick) -> None:
+        self.spawn_brick(brick)
+        self.frame += 1
 
     def _can_place(self, cells: list[Cell]) -> bool:
         return all(
@@ -122,43 +127,24 @@ class Game:
         row_change, col_change = moves[command]
         self._try_move(row_change, col_change)
 
-    def print_board(self):
-        print("Frame:", self.frame)
+    def process_commands(self, commands: list[Command]) -> None:
+        for command in commands:
+            self.move_brick(command)
+
+    def advance_frame(self) -> bool:
+        """Move the active brick down one row, locking it when it cannot move."""
+        if self._try_move(1, 0):
+            self.frame += 1
+            return True
+
+        self.lock_brick()
+        return False
+
+    def complete(self) -> None:
+        self.frame += 1
+
+    def display_board(self) -> list[list[str]]:
         display_board = [row.copy() for row in self.board]
         for row, col, symbol in self.active_brick:
             display_board[row][col] = symbol
-
-        for row in display_board:
-            print("|", " ".join(row), "|")
-
-    def start(self):
-        for brick in self.bricks:
-            self.spawn_brick(brick)
-            self.frame += 1
-
-            while self.active_brick:
-                try:
-                    self.print_board()
-                    command = "".join(
-                        read_input(
-                            "Enter up to 2 commands to process before moving to the next frame "
-                            "(valid commands are L, R, D): "
-                        ).split()
-                    ).upper()
-
-                    # Only looks at the first two commands, ignoring any additional input
-                    for cmd in command[:2]:
-                        self.move_brick(cmd)
-
-                    if self._try_move(1, 0):
-                        self.frame += 1
-                    else:
-                        self.lock_brick()
-                        break
-                except InvalidCommandError as e:
-                    print(e)
-                    continue
-
-        self.frame += 1
-        self.print_board()
-        print("Game Over")
+        return display_board

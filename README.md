@@ -39,6 +39,8 @@ Enter up to two commands per frame:
 - `D` — drop to the lowest available position
 
 For example, `LR` moves left, then right during one frame.
+Only the first two valid commands are processed; other characters are ignored.
+If an entry contains no valid commands, the game asks for commands again without advancing the frame.
 
 ## Run tests
 
