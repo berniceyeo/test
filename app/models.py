@@ -1,11 +1,7 @@
 """Domain values used by the Match-3 game."""
 
-from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, NamedTuple
-
-if TYPE_CHECKING:
-    from .brick import Brick
+from typing import NamedTuple
 
 
 class Command(str, Enum):
@@ -29,12 +25,3 @@ class Cell(NamedTuple):
     row: int
     col: int
     symbol: str
-
-
-@dataclass(frozen=True, kw_only=True)
-class GameConfig:
-    """Parsed dimensions and bricks for a new game."""
-
-    width: int
-    height: int
-    bricks: list["Brick"]

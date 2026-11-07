@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
+from collections.abc import Sequence
 
 from .brick import Brick
-from .constants import EMPTY_CELL
+from .constants import EMPTY_CELL, MAX_COMMANDS_PER_TURN
 from .models import Cell, Command, Direction
 
 
@@ -37,22 +37,45 @@ def clear_matches(board: list[list[str]]) -> None:
         board[row][col] = EMPTY_CELL
 
 
-@dataclass
 class Game:
-    height: int
-    width: int
-
-    bricks: list[Brick]
-    board: list[list[str]] = field(init=False)
-    active_brick: list[Cell] = field(init=False, default_factory=list)
-    frame: int = 0
-
-    def __post_init__(self):
-        # Initialize the board with empty spaces
+    def __init__(
+        self, height: int, width: int, bricks: Sequence[Brick], frame: int = 0
+    ) -> None:
+        self.height = height
+        self.width = width
+        self.frame = frame
+        self.is_over = False
         self.board = [
             [EMPTY_CELL for _ in range(self.width)] for _ in range(self.height)
         ]
-        self.active_brick = []
+        self.active_brick: list[Cell] = []
+        self.bricks = list(bricks)
+
+    def start(self) -> None:
+        """Start this game once, spawning its first configured brick."""
+        self._spawn_next_brick()
+
+    def _spawn_next_brick(self) -> None:
+        if not self.bricks:
+            self.frame += 1
+            self.is_over = True
+            return
+
+        brick = self.bricks.pop(0)
+        if not self.begin_brick(brick):
+            self.is_over = True
+            return
+
+    def step(self, commands: Sequence[Command]) -> None:
+        """Apply a turn, gravity, locking, and progression to the next brick."""
+        for command in commands[:MAX_COMMANDS_PER_TURN]:
+            self.move_brick(command)
+
+        if self._try_move(1, 0):
+            self.frame += 1
+        else:
+            self.lock_brick()
+            self._spawn_next_brick()
 
     def spawn_brick(self, brick: Brick) -> bool:
         """Place a brick, returning False without changing state if blocked."""
@@ -117,22 +140,6 @@ class Game:
         moves = {Command.LEFT: (0, -1), Command.RIGHT: (0, 1)}
         row_change, col_change = moves[command]
         self._try_move(row_change, col_change)
-
-    def process_commands(self, commands: list[Command]) -> None:
-        for command in commands:
-            self.move_brick(command)
-
-    def advance_frame(self) -> bool:
-        """Move the active brick down one row, locking it when it cannot move."""
-        if self._try_move(1, 0):
-            self.frame += 1
-            return True
-
-        self.lock_brick()
-        return False
-
-    def complete(self) -> None:
-        self.frame += 1
 
     def display_board(self) -> list[list[str]]:
         display_board = [row.copy() for row in self.board]

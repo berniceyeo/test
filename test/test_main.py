@@ -32,6 +32,7 @@ def test_parse_valid_configuration():
     config = parse_to_valid_inputs(" 4  5 H@~~ V^** ")
     assert config.width == 4
     assert config.height == 5
+    assert isinstance(config.bricks, tuple)
     assert [(brick.direction, brick.symbols) for brick in config.bricks] == [
         (Direction.HORIZONTAL, ["@", "~", "~"]),
         (Direction.VERTICAL, ["^", "*", "*"]),

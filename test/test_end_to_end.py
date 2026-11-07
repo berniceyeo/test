@@ -68,10 +68,10 @@ def test_terminal_game_advances_without_valid_commands(command_text, error_count
     result = run_terminal_game(f"3 2 H@~~\n{command_text}\nD\nQ\n")
 
     assert_clean_exit(result)
-    assert "Frame: 1\n| @ ~ ~ |\n| . . . |" in result.stdout
+    assert "Frame  1\n| @ ~ ~ |\n| . . . |" in result.stdout
     # The next movement prompt must follow the board after gravity, before D.
     assert (
-        "Frame: 2\n| . . . |\n| @ ~ ~ |\nEnter up to 2 commands"
+        "Frame  2\n| . . . |\n| @ ~ ~ |\nEnter up to 2 commands"
         in result.stdout
     )
     assert result.stdout.count("Enter up to 2 commands") == 2
@@ -88,8 +88,8 @@ def test_terminal_game_advances_without_valid_commands(command_text, error_count
 @pytest.mark.parametrize(
     ("initial_input", "command_prompts", "final_board"),
     [
-        ("2 1 H@~~\n", 0, "Frame: 0\n| . . |"),
-        ("3 1 H@~~ H^**\nD\n", 1, "Frame: 1\n| @ ~ ~ |"),
+        ("2 1 H@~~\n", 0, "Frame  0\n| . . |"),
+        ("3 1 H@~~ H^**\nD\n", 1, "Frame  1\n| @ ~ ~ |"),
     ],
     ids=["brick-does-not-fit", "spawn-cells-occupied"],
 )
@@ -100,7 +100,7 @@ def test_terminal_game_handles_spawn_failure(
 
     assert_clean_exit(result)
     assert result.stdout.count("Game Over") == 1
-    assert f"{final_board}\nGame Over\n" in result.stdout
+    assert f"{final_board}\nGame Over.\n" in result.stdout
     assert result.stdout.count("Enter up to 2 commands") == command_prompts
     assert result.stdout.count("Enter 'S' to restart") == 1
     assert "Input closed" not in result.stdout
