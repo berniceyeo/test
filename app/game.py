@@ -39,11 +39,11 @@ def clear_matches(board: list[list[str]]) -> None:
 
 class Game:
     def __init__(
-        self, height: int, width: int, bricks: Sequence[Brick], frame: int = 0
+        self, height: int, width: int, bricks: Sequence[Brick]
     ) -> None:
         self.height = height
         self.width = width
-        self.frame = frame
+        self.frame = 1
         self.is_over = False
         self.board = [
             [EMPTY_CELL for _ in range(self.width)] for _ in range(self.height)
@@ -57,12 +57,11 @@ class Game:
 
     def _spawn_next_brick(self) -> None:
         if not self.bricks:
-            self.frame += 1
             self.is_over = True
             return
 
         brick = self.bricks.pop(0)
-        if not self.begin_brick(brick):
+        if not self.spawn_brick(brick):
             self.is_over = True
             return
 
@@ -71,11 +70,10 @@ class Game:
         for command in commands[:MAX_COMMANDS_PER_TURN]:
             self.move_brick(command)
 
-        if self._try_move(1, 0):
-            self.frame += 1
-        else:
+        if not self._try_move(1, 0):
             self.lock_brick()
             self._spawn_next_brick()
+        self.frame += 1
 
     def spawn_brick(self, brick: Brick) -> bool:
         """Place a brick, returning False without changing state if blocked."""
@@ -99,12 +97,6 @@ class Game:
             self.board[cell.row][cell.col] = cell.symbol
         self.active_brick = []
         clear_matches(self.board)
-
-    def begin_brick(self, brick: Brick) -> bool:
-        if not self.spawn_brick(brick):
-            return False
-        self.frame += 1
-        return True
 
     def _can_place(self, cells: list[Cell]) -> bool:
         return all(

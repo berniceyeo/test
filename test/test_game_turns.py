@@ -54,14 +54,14 @@ def test_lock_clears_matches_before_spawning_next_brick():
     assert game.active_brick == [Cell(0, 0, "^"), Cell(0, 1, "*"), Cell(0, 2, "*")]
 
 
-def test_blocked_next_brick_ends_game_without_advancing_frame():
+def test_blocked_next_brick_ends_game_after_advancing_frame():
     game = Game(height=1, width=3, bricks=[
         Brick.from_text("H@~~"), Brick.from_text("H^**")
     ])
     game.start()
     game.step([])
     assert game.is_over
-    assert game.frame == 1
+    assert game.frame == 2
     assert game.active_brick == []
     assert game.board == [list("@~~")]
 
@@ -70,7 +70,7 @@ def test_oversized_first_brick_ends_game_on_start():
     game = Game(height=1, width=2, bricks=[Brick.from_text("H@~~")])
     game.start()
     assert game.is_over
-    assert game.frame == 0
+    assert game.frame == 1
     assert game.active_brick == []
     assert game.board == [list("..")]
 

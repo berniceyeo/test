@@ -35,14 +35,14 @@ def test_vertical_brick_stops_above_locked_symbol():
     assert game.board[5][1] == "*"
 
 
-def test_failed_begin_brick_does_not_advance_frame():
+def test_spawning_does_not_advance_frame():
     game = Game(height=1, width=3, bricks=[])
-    assert game.begin_brick(Brick.from_text("H@~~")) is True
+    assert game.spawn_brick(Brick.from_text("H@~~")) is True
     assert game.frame == 1
     game.lock_brick()
     before = [row.copy() for row in game.board]
 
-    assert game.begin_brick(Brick.from_text("H^**")) is False
+    assert game.spawn_brick(Brick.from_text("H^**")) is False
 
     assert game.frame == 1
     assert game.active_brick == []

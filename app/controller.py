@@ -87,7 +87,7 @@ def parse_commands(command_text: str) -> list[Command]:
 
 
 def print_board(game: Game) -> None:
-    """Render the current game state in the terminal."""
-    print("Frame ", game.frame)
+    """Prints the current game board in the terminal."""
+    print("Frame", game.frame)
     for row in game.display_board():
         print("|", " ".join(row), "|")

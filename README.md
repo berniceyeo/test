@@ -38,12 +38,12 @@ The brick fills the single row, the game ends, and `Q` quits.
 <width> <height> <brick> [<brick> ...]
 ```
 
-| Setting | Accepted values |
-| --- | --- |
-| Width and height | Whole numbers from 1 to 100 |
-| Number of bricks | 1 to 5, played in the supplied order |
-| Direction | Uppercase `H` (horizontal) or `V` (vertical) |
-| Brick contents | Exactly three symbols chosen from `@`, `^`, `~`, `*` |
+| Setting          | Accepted values                                      |
+| ---------------- | ---------------------------------------------------- |
+| Width and height | Whole numbers from 1 to 100                          |
+| Number of bricks | 1 to 5, played in the supplied order                 |
+| Direction        | Uppercase `H` (horizontal) or `V` (vertical)         |
+| Brick contents   | Exactly three symbols chosen from `@`, `^`, `~`, `*` |
 
 Separate dimensions and bricks with whitespace; keep each brick token together. Do not enter a separate brick count.
 
@@ -53,23 +53,23 @@ Separate dimensions and bricks with whitespace; keep each brick token together. 
 
 Commands are case-insensitive, and whitespace between commands is ignored.
 
-| Command | Action |
-| --- | --- |
-| `L` | Attempt to move one column left |
-| `R` | Attempt to move one column right |
-| `D` | Drop to the lowest available position |
+| Command | Action                                |
+| ------- | ------------------------------------- |
+| `L`     | Attempt to move one column left       |
+| `R`     | Attempt to move one column right      |
+| `D`     | Drop to the lowest available position |
 
 Each input line uses one turn. The first two valid command characters are processed in order. Gravity then attempts to move the brick down one row. If it cannot move down, the brick locks, matches clear, and the next brick attempts to spawn.
 
-| Input | Result before gravity |
-| --- | --- |
-| `L R` or `lr` | Move left, then right |
-| `RR` | Attempt two moves right |
-| `DR` | Drop, then attempt to move right before locking |
-| `XLR` | Ignore `X`; move left, then right |
-| `LRD` | Process `L` and `R`; ignore the third valid command |
-| `XY` | Display an invalid-input message; make no player move |
-| Blank or whitespace only | Make no player move, without an error message |
+| Input                    | Result before gravity                                 |
+| ------------------------ | ----------------------------------------------------- |
+| `L R` or `lr`            | Move left, then right                                 |
+| `RR`                     | Attempt two moves right                               |
+| `DR`                     | Drop, then attempt to move right before locking       |
+| `XLR`                    | Ignore `X`; move left, then right                     |
+| `LRD`                    | Process `L` and `R`; ignore the third valid command   |
+| `XY`                     | Display an invalid-input message; make no player move |
+| Blank or whitespace only | Make no player move, without an error message         |
 
 **Invalid-only and blank input both use a turn and apply gravity.** Invalid characters mixed with valid commands are ignored without an error message.
 
@@ -125,18 +125,18 @@ Tests cover configuration parsing, validation messages, movement, matching, turn
 
 ## Code structure
 
-| Module | Responsibility |
-| --- | --- |
-| `app/main.py` | Entry point and restart/quit loop |
-| `app/controller.py` | Terminal input parsing, prompting, and rendering |
-| `app/game.py` | Board rules, matching, and turn sequencing |
-| `app/brick.py` | Brick parsing and validation |
-| `app/config.py` | `GameConfig`: named dimensions and a tuple of bricks |
-| `app/models.py` | `Command`, `Direction`, and the `Cell` named tuple |
-| `app/constants.py` | Symbols, empty-cell marker, and size/count limits |
-| `app/errors.py` | Configuration and brick-validation exceptions |
-| `app/user_input.py` | EOF and Ctrl+C handling at prompts |
-| `test/` | Unit, integration, and end-to-end tests |
+| Module              | Responsibility                                       |
+| ------------------- | ---------------------------------------------------- |
+| `app/main.py`       | Entry point and restart/quit loop                    |
+| `app/controller.py` | Terminal input parsing, prompting, and rendering     |
+| `app/game.py`       | Board rules, matching, and turn sequencing           |
+| `app/brick.py`      | Brick parsing and validation                         |
+| `app/config.py`     | `GameConfig`: named dimensions and a tuple of bricks |
+| `app/models.py`     | `Command`, `Direction`, and the `Cell` named tuple   |
+| `app/constants.py`  | Symbols, empty-cell marker, and size/count limits    |
+| `app/errors.py`     | Configuration and brick-validation exceptions        |
+| `app/user_input.py` | EOF and Ctrl+C handling at prompts                   |
+| `test/`             | Unit, integration, and end-to-end tests              |
 
 The controller calls `Game.start()` once and passes validated commands to `Game.step()` until `is_over` is true. The game owns gravity, locking, clearing, brick progression, and completion; it contains no terminal input or printing.
 
