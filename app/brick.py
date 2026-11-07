@@ -5,23 +5,26 @@ from .errors import (
     InvalidBrickDirectionError,
     InvalidBrickSymbolError,
 )
+from .models import Direction
 
 
 @dataclass
 class Brick:
-    direction: str
+    direction: Direction | str
     symbols: list[str]
 
     def __post_init__(self):
-        if self.direction not in ("H", "V"):
+        try:
+            self.direction = Direction(self.direction)
+        except ValueError:
             raise InvalidBrickDirectionError(
                 f"Invalid brick {self.direction}: direction must be H or V"
             )
 
-        if len(self.symbols) < 3:
-            raise BrickStructureError("Brick must contain at least three symbols")
+        if len(self.symbols) != 3:
+            raise BrickStructureError("Brick must have three symbols")
 
-        allowed_symbols = {"@", "#", "~", "*"}
+        allowed_symbols = {"@", "^", "~", "*"}
         invalid_symbols = set(self.symbols) - allowed_symbols
 
         if invalid_symbols:

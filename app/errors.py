@@ -22,6 +22,10 @@ class InvalidInputError(GameError):
     """Invalid input provided for game configuration."""
 
 
+class ExceedMaxBoardSize(InvalidInputError):
+    """Board dimensions exceed the configured maximum."""
+
+
 class SpawnError(GameError):
     """A brick cannot be spawned because it is blocked or does not fit."""
 

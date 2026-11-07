@@ -1,6 +1,6 @@
 # Match-3 Brick Game
 
-A terminal-based falling-brick game. Bricks contain `@`, `#`, `~`, and `*` symbols and can be horizontal (`H`) or vertical (`V`).
+A terminal-based falling-brick game. Bricks contain `@`, `^`, `~`, and `*` symbols and can be horizontal (`H`) or vertical (`V`).
 
 ## Requirements
 
@@ -16,10 +16,10 @@ From the project root:
 python -m app.main
 ```
 
-Enter the board height, board width, and one or more bricks on a single line:
+Enter the board width, board height, and one or more bricks on a single line:
 
 ```text
-5 7 H@~~ V#**
+7 5 H@~~ V^**
 ```
 
 Each brick starts with its direction:
@@ -27,7 +27,8 @@ Each brick starts with its direction:
 - `H` for horizontal
 - `V` for vertical
 
-Each brick must contain at least three supported symbols: `@`, `#`, `~`, or `*`.
+Enter up to five bricks. Each brick must contain exactly three supported symbols: `@`, `^`, `~`, or `*`.
+The board can be at most 100 columns wide and 100 rows high.
 
 ## Commands
 

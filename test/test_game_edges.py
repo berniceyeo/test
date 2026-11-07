@@ -2,10 +2,11 @@ import pytest
 
 from app.brick import Brick
 from app.errors import SpawnError
-from app.game import Game
+from app.game import Game, clear_matches
+from app.models import Command
 
 
-@pytest.mark.parametrize("command", ["L", "R"])
+@pytest.mark.parametrize("command", [Command.LEFT, Command.RIGHT])
 def test_board_edge_blocks_movement(command):
     game = Game(height=4, width=3, bricks=[])
     game.spawn_brick(Brick.from_text("H@~~"))
@@ -26,11 +27,13 @@ def test_oversized_spawn_leaves_state_unchanged(height, width, text):
 
 def test_vertical_brick_stops_above_locked_symbol():
     game = Game(height=6, width=3, bricks=[])
-    game.board[5][1] = "#"
+    game.spawn_brick(Brick.from_text("H^**"))
+    game.move_brick(Command.DROP)
+    game.lock_brick()
     game.spawn_brick(Brick.from_text("V@~~"))
-    game.move_brick("D")
+    game.move_brick(Command.DROP)
     assert game.active_brick == [(2, 1, "@"), (3, 1, "~"), (4, 1, "~")]
-    assert game.board[5][1] == "#"
+    assert game.board[5][1] == "*"
 
 
 def test_dr_moves_right_after_drop_before_locking(monkeypatch):
@@ -75,7 +78,6 @@ def test_lx_keeps_left_move_without_gravity_before_retry(monkeypatch, capsys):
     ids=["long-horizontal", "long-vertical", "crossing", "diagonal", "separated", "pair", "empty"],
 )
 def test_match_edge_cases(rows, expected):
-    game = Game(height=len(rows), width=len(rows[0]), bricks=[])
-    game.board = [list(row) for row in rows]
-    game.clear_matches()
-    assert game.board == [list(row) for row in expected]
+    board = [list(row) for row in rows]
+    clear_matches(board)
+    assert board == [list(row) for row in expected]

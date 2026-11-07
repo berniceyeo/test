@@ -6,6 +6,7 @@ from app.errors import (
     InvalidBrickDirectionError,
     InvalidBrickSymbolError,
 )
+from app.models import Direction
 
 
 def test_rejects_invalid_direction() -> None:
@@ -13,20 +14,29 @@ def test_rejects_invalid_direction() -> None:
         Brick(direction="X", symbols=["@", "~", "*"])
 
 
-def test_rejects_brick_with_fewer_than_three_symbols() -> None:
+@pytest.mark.parametrize(
+    ("direction", "symbols"),
+    [
+        (Direction.HORIZONTAL, ["@", "~"]),
+        (Direction.VERTICAL, ["@", "~", "@", "@"]),
+    ],
+)
+def test_rejects_brick_with_length_other_than_three(
+    direction: Direction, symbols: list[str]
+) -> None:
     with pytest.raises(BrickStructureError):
-        Brick(direction="H", symbols=["@", "~"])
+        Brick(direction=direction, symbols=symbols)
 
 
 def test_rejects_invalid_symbol() -> None:
     with pytest.raises(InvalidBrickSymbolError):
-        Brick(direction="V", symbols=["@", "~", "X"])
+        Brick(direction=Direction.VERTICAL, symbols=["@", "~", "X"])
 
 
 def test_creates_valid_brick_from_text() -> None:
     brick = Brick.from_text("H@~~")
 
-    assert brick.direction == "H"
+    assert brick.direction is Direction.HORIZONTAL
     assert brick.symbols == ["@", "~", "~"]
 
 

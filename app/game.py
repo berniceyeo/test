@@ -1,13 +1,47 @@
 from dataclasses import dataclass, field
 
 from .brick import Brick
+from .constants import EMPTY_CELL
 from .errors import (
     InvalidCommandError,
     SpawnError,
 )
+from .models import Command, Direction
+from .user_input import read_input
 
-EMPTY_CELL = "."
 Cell = tuple[int, int, str]
+
+
+def clear_matches(board: list[list[str]]) -> None:
+    """Remove every horizontal or vertical run of at least three symbols."""
+    matches = set()
+    height = len(board)
+    width = len(board[0]) if board else 0
+
+    for row in range(height):
+        col = 0
+        while col < width:
+            symbol = board[row][col]
+            end_col = col + 1
+            while end_col < width and board[row][end_col] == symbol:
+                end_col += 1
+            if symbol != EMPTY_CELL and end_col - col >= 3:
+                matches.update((row, match_col) for match_col in range(col, end_col))
+            col = end_col
+
+    for col in range(width):
+        row = 0
+        while row < height:
+            symbol = board[row][col]
+            end_row = row + 1
+            while end_row < height and board[end_row][col] == symbol:
+                end_row += 1
+            if symbol != EMPTY_CELL and end_row - row >= 3:
+                matches.update((match_row, col) for match_row in range(row, end_row))
+            row = end_row
+
+    for row, col in matches:
+        board[row][col] = EMPTY_CELL
 
 
 @dataclass
@@ -26,7 +60,7 @@ class Game:
         self.active_brick = []
 
     def spawn_brick(self, brick: Brick):
-        if brick.direction == "H":
+        if brick.direction is Direction.HORIZONTAL:
             col = (self.width - len(brick.symbols)) // 2
             candidate_cells = [
                 (0, col + i, symbol) for i, symbol in enumerate(brick.symbols)
@@ -47,7 +81,7 @@ class Game:
         for row, col, symbol in self.active_brick:
             self.board[row][col] = symbol
         self.active_brick = []
-        self.clear_matches()
+        clear_matches(self.board)
 
     def _can_place(self, cells: list[Cell]) -> bool:
         return all(
@@ -73,63 +107,20 @@ class Game:
         self.active_brick = new_positions
         return True
 
-    def move_brick(self, command: str):
-        if command not in ("L", "R", "D"):
+    def move_brick(self, command: Command | str):
+        try:
+            command = Command(command)
+        except ValueError:
             raise InvalidCommandError(f"Invalid command {command}. Use L, R, or D.")
 
-        if command == "D":
+        if command is Command.DROP:
             while self._try_move(1, 0):
                 pass
             return
 
-        moves = {"L": (0, -1), "R": (0, 1)}
+        moves = {Command.LEFT: (0, -1), Command.RIGHT: (0, 1)}
         row_change, col_change = moves[command]
         self._try_move(row_change, col_change)
-
-    def find_matches(self):
-        matches = set()
-
-        # Check horizontal similar shapes
-        for row in range(self.height):
-            col = 0
-
-            while col < self.width:
-                symbol = self.board[row][col]
-                end_col = col + 1
-
-                while end_col < self.width and self.board[row][end_col] == symbol:
-                    end_col += 1
-
-                if symbol != EMPTY_CELL and end_col - col >= 3:
-                    for match_col in range(col, end_col):
-                        matches.add((row, match_col))
-
-                col = end_col
-
-        # Check vertical similar shapes
-        for col in range(self.width):
-            row = 0
-
-            while row < self.height:
-                symbol = self.board[row][col]
-                end_row = row + 1
-
-                while end_row < self.height and self.board[end_row][col] == symbol:
-                    end_row += 1
-
-                if symbol != EMPTY_CELL and end_row - row >= 3:
-                    for match_row in range(row, end_row):
-                        matches.add((match_row, col))
-
-                row = end_row
-
-        return matches
-
-    def clear_matches(self):
-        matches = self.find_matches()
-
-        for row, col in matches:
-            self.board[row][col] = EMPTY_CELL
 
     def print_board(self):
         print("Frame:", self.frame)
@@ -148,13 +139,12 @@ class Game:
             while self.active_brick:
                 try:
                     self.print_board()
-                    command = (
-                        input(
-                            "Enter up to 2 commands to process before moving to the next frame (valid commands are L, R, D): "
-                        )
-                        .strip()
-                        .upper()
-                    )
+                    command = "".join(
+                        read_input(
+                            "Enter up to 2 commands to process before moving to the next frame "
+                            "(valid commands are L, R, D): "
+                        ).split()
+                    ).upper()
 
                     # Only looks at the first two commands, ignoring any additional input
                     for cmd in command[:2]:
