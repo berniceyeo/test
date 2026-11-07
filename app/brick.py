@@ -11,18 +11,10 @@ from .models import Direction
 
 @dataclass
 class Brick:
-    direction: Direction | str
+    direction: Direction
     symbols: list[str]
 
     def __post_init__(self):
-        try:
-            self.direction = Direction(self.direction)
-        except ValueError:
-            raise InvalidBrickDirectionError(
-                f"Invalid brick {self.direction}: direction must be "
-                f"{Direction.HORIZONTAL.value} or {Direction.VERTICAL.value}"
-            )
-
         if len(self.symbols) != 3:
             raise BrickStructureError("Brick must have three symbols")
 
@@ -34,8 +26,16 @@ class Brick:
             )
 
     @classmethod
-    def from_text(cls, text: str):
+    def from_text(cls, text: str) -> "Brick":
         if not text:
             raise BrickStructureError("Please enter valid Brick")
 
-        return cls(direction=text[0], symbols=list(text[1:]))
+        try:
+            direction = Direction(text[0])
+        except ValueError as error:
+            raise InvalidBrickDirectionError(
+                f"Invalid brick {text[0]}: direction must be "
+                f"{Direction.HORIZONTAL.value} or {Direction.VERTICAL.value}"
+            ) from error
+
+        return cls(direction=direction, symbols=list(text[1:]))

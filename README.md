@@ -41,6 +41,7 @@ Enter up to two commands per frame:
 For example, `LR` moves left, then right during one frame.
 Only the first two valid commands are processed; other characters are ignored.
 If an entry contains no valid commands, no player move occurs and gravity advances the frame.
+Blank or whitespace-only input silently uses a frame. Nonblank input with no valid commands displays an error message and also uses a frame.
 
 ## Run tests
 

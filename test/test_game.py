@@ -1,10 +1,7 @@
-import re
-
 import pytest
 
 from app.brick import Brick
 from app.controller import run_game
-from app.errors import InvalidCommandError
 from app.game import Game, clear_matches
 from app.models import Command
 
@@ -46,16 +43,6 @@ def test_move_brick(command: Command, expected_cells: list[tuple[int, int, str]]
     game.move_brick(command)
 
     assert game.active_brick == expected_cells
-
-
-def test_rejects_invalid_command() -> None:
-    game = Game(height=4, width=5, bricks=[])
-
-    with pytest.raises(
-        InvalidCommandError,
-        match=re.escape("Invalid command X. Use L, R, or D."),
-    ):
-        game.move_brick("X")
 
 
 def test_locked_board_cell_blocks_sideways_move() -> None:

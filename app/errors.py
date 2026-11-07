@@ -22,9 +22,5 @@ class InvalidInputError(GameError):
     """Invalid input provided for game configuration."""
 
 
-class ExceedMaxBoardSize(InvalidInputError):
+class ExceedMaxBoardSizeError(InvalidInputError):
     """Board dimensions exceed the configured maximum."""
-
-
-class InvalidCommandError(GameError):
-    """Invalid command provided for moving the brick."""

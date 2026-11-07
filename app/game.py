@@ -1,17 +1,8 @@
 from dataclasses import dataclass, field
-from typing import NamedTuple
 
 from .brick import Brick
 from .constants import EMPTY_CELL
-from .errors import InvalidCommandError
-from .models import Command, Direction
-
-class Cell(NamedTuple):
-    """A brick symbol at a row and column on the board."""
-
-    row: int
-    col: int
-    symbol: str
+from .models import Cell, Command, Direction
 
 
 def clear_matches(board: list[list[str]]) -> None:
@@ -116,12 +107,8 @@ class Game:
         self.active_brick = new_positions
         return True
 
-    def move_brick(self, command: Command | str):
-        try:
-            command = Command(command)
-        except ValueError:
-            raise InvalidCommandError(f"Invalid command {command}. Use L, R, or D.")
-
+    def move_brick(self, command: Command) -> None:
+        """Apply a command already validated by the input boundary."""
         if command is Command.DROP:
             while self._try_move(1, 0):
                 pass

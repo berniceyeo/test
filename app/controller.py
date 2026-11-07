@@ -2,9 +2,9 @@
 
 from .brick import Brick
 from .constants import MAX_BRICKS, MAX_HEIGHT, MAX_WIDTH
-from .errors import ExceedMaxBoardSize, InvalidInputError
+from .errors import ExceedMaxBoardSizeError, InvalidInputError
 from .game import Game
-from .models import Command
+from .models import Command, GameConfig
 from .user_input import read_input
 
 COMMAND_PROMPT = (
@@ -13,7 +13,7 @@ COMMAND_PROMPT = (
 )
 
 
-def parse_to_valid_inputs(config_text: str) -> tuple[int, int, list[Brick]]:
+def parse_to_valid_inputs(config_text: str) -> GameConfig:
     """Parse and validate a width-first game configuration."""
     inputs = config_text.split()
 
@@ -31,7 +31,7 @@ def parse_to_valid_inputs(config_text: str) -> tuple[int, int, list[Brick]]:
         raise InvalidInputError("Height and width must be greater than zero.")
 
     if width > MAX_WIDTH or height > MAX_HEIGHT:
-        raise ExceedMaxBoardSize(
+        raise ExceedMaxBoardSizeError(
             f"Board cannot exceed {MAX_WIDTH} columns by {MAX_HEIGHT} rows."
         )
 
@@ -39,10 +39,10 @@ def parse_to_valid_inputs(config_text: str) -> tuple[int, int, list[Brick]]:
         raise InvalidInputError(f"Enter no more than {MAX_BRICKS} bricks.")
 
     bricks = [Brick.from_text(text) for text in brick_texts]
-    return width, height, bricks
+    return GameConfig(width=width, height=height, bricks=bricks)
 
 
-def prompt_for_configuration() -> tuple[int, int, list[Brick]]:
+def prompt_for_configuration() -> GameConfig:
     """Prompt until a valid terminal game configuration is supplied."""
     while True:
         try:
@@ -85,12 +85,15 @@ def run_game(game: Game) -> None:
 
         while game.active_brick:
             print_board(game)
-            commands = parse_commands(read_input(COMMAND_PROMPT))
+            command_text = read_input(COMMAND_PROMPT)
+            commands = parse_commands(command_text)
+            if command_text.strip() and not commands:
+                print("Invalid input. No valid commands found; use L, R, or D.")
 
             game.process_commands(commands)
             game.advance_frame()
 
     else:
         game.complete()
-        print_board(game)
+    print_board(game)
     print("Game Over")

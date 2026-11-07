@@ -7,9 +7,9 @@ def main():
     print("Welcome to Match-3 game!")
 
     while True:
-        width, height, bricks = prompt_for_configuration()
+        config = prompt_for_configuration()
 
-        game = Game(height=height, width=width, bricks=bricks)
+        game = Game(height=config.height, width=config.width, bricks=config.bricks)
         run_game(game)
 
         while True:

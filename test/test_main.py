@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from app.errors import ExceedMaxBoardSize, InvalidInputError
+from app.errors import ExceedMaxBoardSizeError, InvalidInputError
 from app.constants import MAX_BRICKS, MAX_HEIGHT, MAX_WIDTH
 from app.controller import parse_to_valid_inputs
 from app.main import main
@@ -29,9 +29,10 @@ def test_invalid_setup_prompts_again(config, monkeypatch, capsys):
 
 
 def test_parse_valid_configuration():
-    width, height, bricks = parse_to_valid_inputs(" 4  5 H@~~ V^** ")
-    assert (width, height) == (4, 5)
-    assert [(brick.direction, brick.symbols) for brick in bricks] == [
+    config = parse_to_valid_inputs(" 4  5 H@~~ V^** ")
+    assert config.width == 4
+    assert config.height == 5
+    assert [(brick.direction, brick.symbols) for brick in config.bricks] == [
         (Direction.HORIZONTAL, ["@", "~", "~"]),
         (Direction.VERTICAL, ["^", "*", "*"]),
     ]
@@ -65,7 +66,7 @@ def test_rejects_configuration_with_more_than_five_bricks():
 )
 def test_rejects_configuration_larger_than_maximum_board(config):
     with pytest.raises(
-        ExceedMaxBoardSize,
+        ExceedMaxBoardSizeError,
         match=re.escape(
             f"Board cannot exceed {MAX_WIDTH} columns by {MAX_HEIGHT} rows."
         ),
@@ -74,8 +75,9 @@ def test_rejects_configuration_larger_than_maximum_board(config):
 
 
 def test_accepts_maximum_board_size():
-    width, height, _ = parse_to_valid_inputs(f"{MAX_WIDTH} {MAX_HEIGHT} H@~~")
-    assert (width, height) == (MAX_WIDTH, MAX_HEIGHT)
+    config = parse_to_valid_inputs(f"{MAX_WIDTH} {MAX_HEIGHT} H@~~")
+    assert config.width == MAX_WIDTH
+    assert config.height == MAX_HEIGHT
 
 
 def test_spawn_failure_offers_restart_and_quit(monkeypatch, capsys):

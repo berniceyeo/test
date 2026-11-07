@@ -16,7 +16,7 @@ def test_rejects_invalid_direction() -> None:
         InvalidBrickDirectionError,
         match=re.escape("Invalid brick X: direction must be H or V"),
     ):
-        Brick(direction="X", symbols=["@", "~", "*"])
+        Brick.from_text("X@~*")
 
 
 @pytest.mark.parametrize(
@@ -38,10 +38,14 @@ def test_rejects_invalid_symbol() -> None:
         Brick(direction=Direction.VERTICAL, symbols=["@", "~", "X"])
 
 
-def test_creates_valid_brick_from_text() -> None:
-    brick = Brick.from_text("H@~~")
+@pytest.mark.parametrize(
+    ("text", "direction"),
+    [("H@~~", Direction.HORIZONTAL), ("V@~~", Direction.VERTICAL)],
+)
+def test_creates_valid_brick_from_text(text: str, direction: Direction) -> None:
+    brick = Brick.from_text(text)
 
-    assert brick.direction is Direction.HORIZONTAL
+    assert brick.direction is direction
     assert brick.symbols == ["@", "~", "~"]
 
 

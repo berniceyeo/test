@@ -59,8 +59,13 @@ def test_terminal_game_recovers_from_invalid_configuration(config, message) -> N
     assert "Thank you for playing Match-3!" in result.stdout
 
 
-def test_terminal_game_advances_after_all_invalid_commands() -> None:
-    result = run_terminal_game("3 2 H@~~\nXX\nD\nQ\n")
+@pytest.mark.parametrize(
+    ("command_text", "error_count"),
+    [("XY", 1), ("", 0), (" \t ", 0)],
+    ids=["invalid", "blank", "whitespace"],
+)
+def test_terminal_game_advances_without_valid_commands(command_text, error_count) -> None:
+    result = run_terminal_game(f"3 2 H@~~\n{command_text}\nD\nQ\n")
 
     assert_clean_exit(result)
     assert "Frame: 1\n| @ ~ ~ |\n| . . . |" in result.stdout
@@ -72,21 +77,30 @@ def test_terminal_game_advances_after_all_invalid_commands() -> None:
     assert result.stdout.count("Enter up to 2 commands") == 2
     assert result.stdout.count("Game Over") == 1
     assert result.stdout.count("Enter 'S' to restart") == 1
-    assert "Invalid input" not in result.stdout
+    assert result.stdout.count(
+        "Invalid input. No valid commands found; use L, R, or D."
+    ) == error_count
+    assert "Invalid input. Please enter 'S' or 'Q'." not in result.stdout
     assert "Input closed" not in result.stdout
     assert "Thank you for playing Match-3!" in result.stdout
 
 
 @pytest.mark.parametrize(
-    ("initial_input", "command_prompts"),
-    [("2 1 H@~~\n", 0), ("3 1 H@~~ H^**\nD\n", 1)],
+    ("initial_input", "command_prompts", "final_board"),
+    [
+        ("2 1 H@~~\n", 0, "Frame: 0\n| . . |"),
+        ("3 1 H@~~ H^**\nD\n", 1, "Frame: 1\n| @ ~ ~ |"),
+    ],
     ids=["brick-does-not-fit", "spawn-cells-occupied"],
 )
-def test_terminal_game_handles_spawn_failure(initial_input, command_prompts) -> None:
+def test_terminal_game_handles_spawn_failure(
+    initial_input, command_prompts, final_board
+) -> None:
     result = run_terminal_game(initial_input + "Q\n")
 
     assert_clean_exit(result)
     assert result.stdout.count("Game Over") == 1
+    assert f"{final_board}\nGame Over\n" in result.stdout
     assert result.stdout.count("Enter up to 2 commands") == command_prompts
     assert result.stdout.count("Enter 'S' to restart") == 1
     assert "Input closed" not in result.stdout
